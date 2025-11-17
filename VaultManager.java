@@ -16,7 +16,11 @@ public class VaultManager {
 
     private final File VAULT_FILE = new File("vault.txt");
 
-    public VaultManager() {}
+    private final CustomCipher cipher;
+    
+    public VaultManager(CustomCipher cipher) {
+        this.cipher = cipher;
+    }
 
     /**
      * Encrypts and stores a new record in the vault file.
