@@ -14,6 +14,8 @@ import java.util.Arrays;
  * For the purposes of this application, a 16 character long user-defined
  * key, consisting of letters (lowercase and uppercase) and numbers, is
  * assumed, and subkeys of the same length and composition are generated.
+ *
+ * @see Mac
  */
 public class SubkeyGenerator {
 
@@ -77,7 +79,7 @@ public class SubkeyGenerator {
             byte[] okm = expand(prk, info);
 
             // Converting the raw bytes into a String using the Base62 encoding.
-            subkeys[i] = toBase62(okm, 16);
+            subkeys[i] = toBase62(okm);
 
         }
 
@@ -174,27 +176,24 @@ public class SubkeyGenerator {
         return result;
     }
 
-    /** Convert bytes to Base62 alphanumeric string */
-    private static String toBase62(byte[] bytes, int length) {
-        StringBuilder sb = new StringBuilder();
-        int idx = 0;
+    /**
+     * This auxiliary method converts a 16-byte output keying material (okm)
+     * produced by the expand() method into a 16-character String using
+     * Base62 encoding.
+     *
+     * @param bytes the okm produced by the expand() method
+     * @return the okm encoded into a String
+     */
+    private static String toBase62(byte[] bytes) {
 
-        // Convert each byte to a Base62 character
-        while (sb.length() < length) {
-            int v = bytes[idx++] & 0xFF;
-            sb.append(BASE62_ALPHABET[v % BASE62_ALPHABET.length]);
-            if (idx >= bytes.length) idx = 0; // wrap if needed
+        StringBuilder sb = new StringBuilder(16);
+
+        for (int i = 0; i < 16; i++) {
+            int v = bytes[i] & 0xFF;
+            sb.append(BASE62_ALPHABET[v % 62]);
         }
 
         return sb.toString();
-    }
-
-    public static void main(String[] args)
-            throws NoSuchAlgorithmException, InvalidKeyException {
-        String[] subkeys = generateSubkeys("this12is896a9key", 8);
-        for (String subkey : subkeys) {
-            System.out.println(subkey);
-        }
     }
 
 }

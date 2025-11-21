@@ -19,27 +19,22 @@ import java.io.FileReader;
 public class VaultManager {
 
     private final File VAULT_FILE = new File("vault.txt");
-
-    // Cipher used for encrypting/decrypting
     private final CustomCipher cipher;
 
     // Validation marker
-    private static final String MARKER = "VALID";
+    private static final String MARKER = "VALID_KEY";
 
-    // Constructor used in your app
-    public VaultManager(CustomCipher cipher) {
-        this.cipher = cipher;
-    }
-
-    /**
-     * Writes the encrypted validation marker ONLY if the file is empty.
-     */
-    private void writeMarkerIfEmpty() throws IOException {
-        if (VAULT_FILE.length() == 0) {
-            try (FileWriter writer = new FileWriter(VAULT_FILE, true)) {
-                String encryptedMarker = cipher.encrypt(MARKER);
-                writer.write(encryptedMarker + "\n");
+    public VaultManager(CustomCipher cipherConstr) {
+        cipher = cipherConstr;
+        try {
+            if (VAULT_FILE.createNewFile()) {
+                try (FileWriter fileWriter = new FileWriter(VAULT_FILE)) {
+                    fileWriter.write(cipher.encrypt(MARKER) + "\n");
+                }
             }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -63,7 +58,6 @@ public class VaultManager {
             throw new IllegalStateException("Cipher is not initialized in VaultManager.");
         }
         try {
-            writeMarkerIfEmpty(); // ensure marker exists
 
             try (FileWriter fileWriter = new FileWriter(VAULT_FILE, true)) {
                 String plainLine = label + " " + password;
@@ -84,7 +78,6 @@ public class VaultManager {
             throw new IllegalStateException("Cipher is not initialized in VaultManager.");
         }
         try {
-            writeMarkerIfEmpty(); // ensure marker exists
 
             try (BufferedWriter bufferedWriter =
                          new BufferedWriter(new FileWriter(VAULT_FILE,true))) {

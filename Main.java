@@ -29,12 +29,9 @@ public class Main {
 
         try {
             // Prompt user for master key
-            System.out.print("Enter key (16 - 32 characters): ");
+            System.out.print("Enter key (16 characters): ");
             String userKey = scanner.nextLine();
 
-
-            // Validate key
-//            KeyManager keyManager = new KeyManager(userKey);
 
             // Generate subkeys externally
             String[] roundKeys = SubkeyGenerator.generateSubkeys(userKey, 8);
