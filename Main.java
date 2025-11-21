@@ -32,12 +32,12 @@ public class Main {
             System.out.print("Enter key (16 - 32 characters): ");
             String userKey = scanner.nextLine();
 
+
             // Validate key
-            KeyManager keyManager = new KeyManager(userKey);
+//            KeyManager keyManager = new KeyManager(userKey);
 
             // Generate subkeys externally
-            SubkeyGenerator subkeyGenerator = new SubkeyGenerator(userKey);
-            String[] roundKeys = subkeyGenerator.getRoundKeys();
+            String[] roundKeys = SubkeyGenerator.generateSubkeys(userKey, 8);
 
             // Create cipher
             CustomCipher cipher = new CustomCipher(roundKeys);
