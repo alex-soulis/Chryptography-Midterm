@@ -4,30 +4,39 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+
         Scanner scanner = new Scanner(System.in);
 
         try {
-            // 1. Read user key
-            System.out.print("Enter key (16 - 32 characters): ");
-            String key = scanner.nextLine();
+            // 1. Ask user for main key
+            System.out.print("Enter key (16–32 characters): ");
+            String userKey = scanner.nextLine();
 
-            // Validate key using KeyManager (throws if invalid)
-            KeyManager keyManager = new KeyManager(key);
+            // 2. Validate key using KeyManager (throws if invalid)
+            KeyManager keyManager = new KeyManager(userKey);
 
-            // 2. Initialize cipher and vault
-            CustomCipher cipher = new CustomCipher(key);
+            // 3. Generate round keys using your teammate's class
+            //    (SubkeyGenerator must be implemented in a separate file)
+            SubkeyGenerator subkeyGenerator = new SubkeyGenerator(userKey);
+            String[] roundKeys = subkeyGenerator.getRoundKeys();
+
+            // 4. Create cipher with round keys
+            CustomCipher cipher = new CustomCipher(roundKeys);
+
+            // 5. Create VaultManager using the cipher (handles marker + vault file)
             VaultManager vaultManager = new VaultManager(cipher);
 
-            // 3. Password generator
+            // 6. Password generator
             PasswordGenerator passwordGenerator = new PasswordGenerator();
 
             int choice = -1;
-            while (choice != 4) {
-                System.out.println("\n==== MENU ====");
+            while (choice != 5) {
+                System.out.println("\n==== PASSWORD VAULT MENU ====");
                 System.out.println("1) Generate and store new password");
                 System.out.println("2) View all records (decrypted)");
-                System.out.println("3) Run encryption benchmark");
-                System.out.println("4) Exit");
+                System.out.println("3) Find record by label");
+                System.out.println("4) Run encryption benchmark");
+                System.out.println("5) Exit");
                 System.out.print("Choose: ");
 
                 try {
@@ -38,6 +47,7 @@ public class Main {
 
                 switch (choice) {
                     case 1:
+                        // Generate + store password
                         System.out.print("Enter label: ");
                         String label = scanner.nextLine();
 
@@ -46,7 +56,7 @@ public class Main {
                         try {
                             length = Integer.parseInt(scanner.nextLine());
                         } catch (NumberFormatException e) {
-                            System.out.println("Invalid length. Using default.");
+                            System.out.println("Invalid length. Using default length.");
                             length = passwordGenerator.getPasswordLength();
                         }
 
@@ -64,18 +74,36 @@ public class Main {
                         break;
 
                     case 2:
+                        // View all records
                         ArrayList<Record> records = vaultManager.retrieveRecords();
                         System.out.println("\n-- Decrypted Vault Records --");
-                        for (Record r : records) {
-                            System.out.println(r);
+                        if (records.isEmpty()) {
+                            System.out.println("(No records found or wrong key.)");
+                        } else {
+                            for (Record r : records) {
+                                System.out.println(r);
+                            }
                         }
                         break;
 
                     case 3:
-                        Benchmark.run(cipher);
+                        // Find by label
+                        System.out.print("Enter label to search: ");
+                        String searchLabel = scanner.nextLine();
+                        Record found = vaultManager.retrieveRecord(searchLabel);
+                        if (found == null) {
+                            System.out.println("No record found with label: " + searchLabel);
+                        } else {
+                            System.out.println("Found: " + found);
+                        }
                         break;
 
                     case 4:
+                        // Run benchmark (time vs number of encrypt/decrypt operations)
+                        Benchmark.run(cipher);
+                        break;
+
+                    case 5:
                         System.out.println("Exiting...");
                         break;
 
