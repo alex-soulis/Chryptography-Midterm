@@ -4,7 +4,7 @@ import java.security.SecureRandom;
  * This class can be used to generate strong random passwords of
  * user-defined length, consisting of letters (both lower and uppercase),
  * numbers, and symbols. The length of the passwords must be within certain
- * limits, as recommended by the latest National Institute Standards and
+ * limits, as recommended by the latest National Institute of Standards and
  * Technology (NIST) guidelines
  * (<a href="https://pages.nist.gov/800-63-4/sp800-63b.html">SP 800-63B</a>).
  * To increase the strength of the generated passwords, the {@link SecureRandom}
@@ -60,15 +60,6 @@ public class PasswordGenerator {
 
         passwordLength = userDefinedLength;
     }
-
-//    /**
-//     * Gets the current password length.
-//     *
-//     * @return the current password length
-//     */
-//    public int getPasswordLength() {
-//        return passwordLength;
-//    }
 
     /**
      * Generates a strong random password consisting of letters (lower and

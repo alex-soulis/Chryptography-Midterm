@@ -64,6 +64,8 @@ public class SubkeyGenerator {
         byte[] userDefinedKeyBytes = userDefinedKey
                 .getBytes(StandardCharsets.UTF_8);
 
+        byte[] prk = extract(userDefinedKeyBytes);
+
         for (int i = 0; i < numberOfSubkeys; i++) {
 
             /*
@@ -73,7 +75,7 @@ public class SubkeyGenerator {
              */
             byte[] info = ("subkey_" + i).getBytes(StandardCharsets.UTF_8);
 
-            byte[] prk = extract(userDefinedKeyBytes);
+
             byte[] okm = expand(prk, info);
 
             subkeys[i] = toBase62(okm);
