@@ -27,22 +27,84 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
+        System.out.println("""
+================================================================================
+||                              Password Manager                              ||
+================================================================================
+""");
+
+        System.out.println("""
+\tWelcome! This program can be used to create and store passwords. The passwords
+are stored in an encrypted form so that only your key can decrypt them.\n""");
+
         try {
-            // Prompt user for master key
-            System.out.print("Enter key (16 characters): ");
-            String userKey = scanner.nextLine();
+
+            CustomCipher cipher;
+            VaultManager vaultManager;
+
+            if (!VaultManager.VAULT_FILE.exists()) {
+
+                System.out.println("""
+It seems like you are using this program for the first time. Please enter a key
+of your choice that is 16 characters long and consists of letters (lower and/or
+upper case) and numbers (symbols are not allowed).\n""");
+
+                String[] roundKeys;
+                while (true){
+                    System.out.print("Key: ");
+                    try {
+                        String userKey = scanner.nextLine();
+                        roundKeys = SubkeyGenerator.generateSubkeys(userKey, 8);
+                        break;
+                    } catch (IllegalArgumentException exc) {
+                        if (exc.getMessage().equals("Invalid key length")) {
+                            System.out.println("The key must be 16 characters! "
+                                    + "Please try again.");
+                        } else if (exc.getMessage().equals("Invalid key "
+                                + "characters")) {
+                            System.out.println("The key must only contain "
+                                    + "letters (lower or upper case) and "
+                                    + "numbers (symbols are not allowed). "
+                                    + "Please try again.");
+                        }
+                    }
+                }
+
+                cipher = new CustomCipher(roundKeys);
+                vaultManager = new VaultManager(cipher);
+
+            } else {
+
+                while (true) {
+
+                    System.out.print("Key: ");
+                    String userKey = scanner.nextLine();
+
+                    String[] roundKeys;
+                    try {
+                        roundKeys = SubkeyGenerator
+                                .generateSubkeys(userKey, 8);
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("The key must be 16 characters! "
+                                + "Please try again.");
+                        continue;
+                    }
 
 
-            // Generate subkeys externally
-            String[] roundKeys = SubkeyGenerator.generateSubkeys(userKey, 8);
+                    cipher = new CustomCipher(roundKeys);
+                    vaultManager = new VaultManager(cipher);
 
-            // Create cipher
-            CustomCipher cipher = new CustomCipher(roundKeys);
+                    // Validating user-defined key
+                    if (vaultManager.validateKey()) {
+                        break;
+                    } else {
+                        System.out.println("Invalid key! Please try again.");
+                    }
 
-            // Create vault manager
-            VaultManager vaultManager = new VaultManager(cipher);
+                }
 
-            // Create password generator
+            }
+
             PasswordGenerator passwordGenerator = new PasswordGenerator();
 
             int choice = -1;

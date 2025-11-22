@@ -26,10 +26,6 @@ public class SubkeyGenerator {
      */
     private static final String MAC_ALGORITHM = "HmacSHA256";
 
-    /**
-     * The alphabet used to convert the raw bytes provided by the HKDF to
-     * characters using the Base62 encoding.
-     */
     private static final char[] BASE62_ALPHABET =
             "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
                     .toCharArray();
@@ -56,12 +52,15 @@ public class SubkeyGenerator {
             throws NoSuchAlgorithmException, InvalidKeyException,
             IllegalArgumentException {
         if (userDefinedKey.length() != 16) {
-            throw new InvalidParameterException("Key length must be 16");
+            throw new InvalidParameterException("Invalid key length");
+        }
+
+        if (!userDefinedKey.matches("[A-Za-z0-9]+")) {
+            throw new InvalidParameterException("Invalid key characters");
         }
 
         String[] subkeys = new String[numberOfSubkeys];
 
-        // Converting the user-defined key to bytes using UTF_8.
         byte[] userDefinedKeyBytes = userDefinedKey
                 .getBytes(StandardCharsets.UTF_8);
 
@@ -74,11 +73,9 @@ public class SubkeyGenerator {
              */
             byte[] info = ("subkey_" + i).getBytes(StandardCharsets.UTF_8);
 
-            // The "extract-then-expand" paradigm in action.
             byte[] prk = extract(userDefinedKeyBytes);
             byte[] okm = expand(prk, info);
 
-            // Converting the raw bytes into a String using the Base62 encoding.
             subkeys[i] = toBase62(okm);
 
         }
@@ -113,7 +110,6 @@ public class SubkeyGenerator {
 
         mac.init(new SecretKeySpec(saltPlaceholder, MAC_ALGORITHM));
 
-        // Returning the result of the HMAC to use in the expand mechanism.
         return mac.doFinal(ikm);
     }
 
@@ -145,9 +141,7 @@ public class SubkeyGenerator {
 
         // The desired length of the output keying material.
         int length = 16;
-
         byte[] result = new byte[length];
-        // Starts as T(0); represents T(n-1).
         byte[] previous = new byte[0];
         // Tracks how many bytes have been written into the result buffer.
         int outPos = 0;
@@ -155,15 +149,12 @@ public class SubkeyGenerator {
 
         while (outPos < length) {
             mac.reset();
-            // Prepending T(i-1) to the HMAC.
             mac.update(previous);
-            // Appending the context-bound info.
             mac.update(info);
-            // Appending the incrementing counter.
             mac.update((byte) iterationCounter);
             previous = mac.doFinal();
             /*
-             * Use this value to only copy the desired number of bytes from
+             * This value is used only to copy the desired number of bytes from
              * the HMAC result. Useful in the final iteration.
              */
             int copyLen = Math.min(previous.length, length - outPos);

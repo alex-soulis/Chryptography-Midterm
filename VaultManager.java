@@ -1,172 +1,158 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.BufferedReader;
+import java.io.*;
 import java.util.ArrayList;
-import java.io.FileReader;
+import java.util.Scanner;
 
 /**
- * This class manages the encrypted vault file where all the
- * passwords and their labels are stored.
+ * This class can be used to manage the encrypted file where all the
+ * passwords and their labels are stored. The records are expected to have
+ * the following form: the label (encrypted), followed by whitespace
+ * character, and then the password (encrypted). To follow this format, the
+ * auxiliary {@link Record} class is used. The class uses the
+ * {@link CustomCipher} class to encrypt plaintext to ciphertext and decrypt
+ * ciphertext to plaintext respectively. It also uses a validation string (a
+ * predefined string at the start of the file) that can be used to ensure the
+ * user has entered the correct key for the specific vault file.
  *
- * Record format (plaintext before encryption):
- *     <label> <password>
- *
- * First line of the vault file is an encrypted validation marker ("VALID")
- * used to check whether the user's key is correct.
+ * @see CustomCipher
+ * @see Record
  */
 public class VaultManager {
 
-    private final File VAULT_FILE = new File("vault.txt");
+    public static final File VAULT_FILE = new File("vault.txt");
+
+    private static final String VALIDATION_STRING = "VALID_KEY";
+
     private final CustomCipher cipher;
 
-    // Validation marker
-    private static final String MARKER = "VALID_KEY";
+    /**
+     * This constructor initializes a VaultManager object by setting the
+     * cipher object. It also checks if the vault file exists, and if it
+     * doesn't, it creates one and appends the validation string at the start
+     * of the file.
+     *
+     * @param cipherConstr the cipher to be used to encrypt and decrypt the
+     *                     vault file
+     * @throws IllegalArgumentException in case the passed cipher is null
+     */
+    public VaultManager(CustomCipher cipherConstr)
+            throws IllegalArgumentException {
+        if (cipherConstr == null) {
+            throw new IllegalArgumentException("Passed cipher is null.");
+        } else {
+            cipher = cipherConstr;
+        }
 
-    public VaultManager(CustomCipher cipherConstr) {
-        cipher = cipherConstr;
         try {
             if (VAULT_FILE.createNewFile()) {
                 try (FileWriter fileWriter = new FileWriter(VAULT_FILE)) {
-                    fileWriter.write(cipher.encrypt(MARKER) + "\n");
+                    fileWriter.write(cipher.encrypt(VALIDATION_STRING)
+                            + "\n");
                 }
             }
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Reads the validation marker and checks if the key is correct.
-     * Returns true if valid, false if key is wrong.
+     * This method can be used to validate the user-defined key. The cipher
+     * (initialized with the user-defined key) is used to decrypt the
+     * validation string, which is then compared to the predefined validation
+     * string value.
+     *
+     * @return true, if the user-define key is correct; false, otherwise
      */
-    private boolean validateKey(BufferedReader reader) throws IOException {
-        String firstLine = reader.readLine();
-        if (firstLine == null) return false;
-
-        String decrypted = cipher.decrypt(firstLine);
-        return decrypted.equals(MARKER);
+    public boolean validateKey()  {
+        try {
+            Scanner fileScanner = new Scanner(VAULT_FILE);
+            String firstLine =  fileScanner.nextLine();
+            return cipher.decrypt(firstLine).equals(VALIDATION_STRING);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * Encrypts and stores a new record in the vault file.
+     *
+     * @param label the label of the password
+     * @param password the password corresponding to the label
      */
     public void storeRecord(String label, String password) {
-        if (cipher == null) {
-            throw new IllegalStateException("Cipher is not initialized in VaultManager.");
-        }
-        try {
-
-            try (FileWriter fileWriter = new FileWriter(VAULT_FILE, true)) {
-                String plainLine = label + " " + password;
-                String encryptedLine = cipher.encrypt(plainLine);
-                fileWriter.write(encryptedLine + "\n");
-            }
-
+        try (FileWriter fileWriter = new FileWriter(VAULT_FILE, true)){
+            fileWriter.write(cipher.encrypt(label) + " "
+                    + cipher.encrypt(password) + "\n");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Encrypts and stores multiple records.
+     * Encrypts and stores an {@link ArrayList} of records (implemented as
+     * {@link Record} objects).
+     *
+     * @param records an ArrayList of Record objects
      */
     public void storeRecords(ArrayList<Record> records) {
-        if (cipher == null) {
-            throw new IllegalStateException("Cipher is not initialized in VaultManager.");
-        }
-        try {
-
-            try (BufferedWriter bufferedWriter =
-                         new BufferedWriter(new FileWriter(VAULT_FILE,true))) {
-                for (Record r : records) {
-                    String plainLine = r.getLabel() + " " + r.getPassword();
-                    String encryptedLine = cipher.encrypt(plainLine);
-                    bufferedWriter.write(encryptedLine);
-                    bufferedWriter.newLine();
-                }
+        try (BufferedWriter bufferedWriter =
+                     new BufferedWriter(new FileWriter(VAULT_FILE,true))) {
+            for (Record r : records) {
+                bufferedWriter.write(cipher.encrypt(r.getLabel()) + " "
+                        + cipher.encrypt(r.getPassword()));
+                bufferedWriter.newLine();
             }
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Retrieves and decrypts all records from the vault.
+     * Retrieves and decrypts all records and returns them as an
+     * {@link ArrayList} of {@link Record} objects.
+     *
+     * @return an ArrayList of Record objects
      */
     public ArrayList<Record> retrieveRecords() {
-        if (cipher == null) {
-            throw new IllegalStateException("Cipher is not initialized in VaultManager.");
-        }
         try {
             ArrayList<Record> records = new ArrayList<>();
             BufferedReader bufferedReader = new BufferedReader(
                     new FileReader(VAULT_FILE));
-
-            // Validate key first
-            if (!validateKey(bufferedReader)) {
-                System.out.println("ERROR: Incorrect key. Cannot decrypt vault.");
-                return records; // return empty
-            }
-
-            // Process remaining lines (records)
             String line;
+            // First line stores the validation string.
+            bufferedReader.readLine();
             while ((line = bufferedReader.readLine()) != null) {
-                String decryptedLine = cipher.decrypt(line);
-
-                int spaceIndex = decryptedLine.indexOf(' ');
-                if (spaceIndex == -1) continue;
-
-                String label = decryptedLine.substring(0, spaceIndex);
-                String password = decryptedLine.substring(spaceIndex + 1);
-                records.add(new Record(label, password));
+                String[] tokens = line.split(" ");
+                records.add(new Record(cipher.decrypt(tokens[0]),
+                        cipher.decrypt(tokens[1])));
             }
-
             return records;
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * Retrieves one record by label.
+     * Retrieves and decrypts the record that corresponds to the passed
+     * label, and returns it as an {@link Record} object.
+     *
+     * @param label the label of the requested record
+     * @return the Record that corresponding to the passed label
      */
     public Record retrieveRecord(String label) {
-        if (cipher == null) {
-            throw new IllegalStateException("Cipher is not initialized in VaultManager.");
-        }
         try {
             BufferedReader bufferedReader =
                     new BufferedReader(new FileReader(VAULT_FILE));
-
-            // Validate key
-            if (!validateKey(bufferedReader)) {
-                System.out.println("ERROR: Incorrect key. Cannot decrypt vault.");
-                return null;
-            }
-
-            // Search through records
             String line;
+            // First line stores the validation string.
+            bufferedReader.readLine();
             while ((line = bufferedReader.readLine()) != null) {
-                String decryptedLine = cipher.decrypt(line);
-
-                int spaceIndex = decryptedLine.indexOf(' ');
-                if (spaceIndex == -1) continue;
-
-                String recordLabel = decryptedLine.substring(0, spaceIndex);
-                String recordPassword = decryptedLine.substring(spaceIndex + 1);
-
-                if (recordLabel.equals(label)) {
-                    return new Record(recordLabel, recordPassword);
+                String[] tokens = line.split(" ");
+                if (cipher.decrypt(tokens[0]).equalsIgnoreCase(label)) {
+                    return new Record(cipher.decrypt(tokens[0]),
+                            cipher.decrypt(tokens[1]));
                 }
             }
-
             return null;
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
