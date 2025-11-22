@@ -24,7 +24,7 @@ public class Benchmark {
             long end = System.currentTimeMillis();
             long duration = end - start;
 
-            System.out.println(count + "\t" + duration);
+            System.out.println(count + "\t\t" + duration);
         }
     }
 }

@@ -78,12 +78,17 @@ public class VaultManager {
      * @param label the label of the password
      * @param password the password corresponding to the label
      */
-    public void storeRecord(String label, String password) {
-        try (FileWriter fileWriter = new FileWriter(VAULT_FILE, true)){
-            fileWriter.write(cipher.encrypt(label) + " "
-                    + cipher.encrypt(password) + "\n");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public void storeRecord(String label, String password)
+            throws IllegalArgumentException {
+        if (retrieveRecord(label) != null) {
+            throw new IllegalArgumentException("Record already exists.");
+        } else {
+            try (FileWriter fileWriter = new FileWriter(VAULT_FILE, true)){
+                fileWriter.write(cipher.encrypt(label) + " "
+                        + cipher.encrypt(password) + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -65,10 +65,6 @@ upper case) and numbers (symbols are not allowed).
                                     + "Please try again.");
                         } else if (exc.getMessage().equals("Invalid key "
                                 + "characters")) {
-                            System.out.println("The key must only contain "
-                                    + "letters (lower or upper case) and "
-                                    + "numbers (symbols are not allowed). "
-                                    + "Please try again.");
                             System.out.println("""
 The key must only contain letters (lower and/or upper case) and numbers (symbols
 are not allowed). Please try again.""");
@@ -90,9 +86,16 @@ are not allowed). Please try again.""");
                     try {
                         roundKeys = SubkeyGenerator
                                 .generateSubkeys(userKey, 8);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("The key must be 16 characters! "
-                                + "Please try again.");
+                    } catch (IllegalArgumentException exc) {
+                        if (exc.getMessage().equals("Invalid key length")) {
+                            System.out.println("The key must be 16 characters! "
+                                    + "Please try again.");
+                        } else if (exc.getMessage().equals("Invalid key "
+                                + "characters")) {
+                            System.out.println("""
+The key must only contain letters (lower and/or upper case) and numbers (symbols
+are not allowed). Please try again.""");
+                        }
                         continue;
                     }
 
@@ -134,20 +137,32 @@ are not allowed). Please try again.""");
                 switch (choice) {
 
                     case 1:
-                        System.out.print("Enter label: ");
-                        String label = scanner.nextLine();
+                        while (true) {
+                            System.out.print("Enter label: ");
+                            String label = scanner.nextLine();
 
-                        System.out.print("Password length (8–64): ");
-                        int length;
+                            System.out.print("Password length (8–64): ");
+                            int length;
 
-                        try {
-                            length = Integer.parseInt(scanner.nextLine());
-                        } catch (Exception e) {
-                            length = passwordGenerator.getPasswordLength();
+                            try {
+                                length = Integer.parseInt(scanner.nextLine());
+                            } catch (Exception e) {
+                                length = PasswordGenerator
+                                        .DEFAULT_PASSWORD_LENGTH;
+                                System.out.println("Invalid length! The default"
+                                        + " password length was used instead.");
+                            }
+
+                            String password = passwordGenerator
+                                    .generatePassword(length);
+                            try {
+                                vaultManager.storeRecord(label, password);
+                                break;
+                            } catch (IllegalArgumentException exc) {
+                                System.out.println("A record with that label " +
+                                        "already exists. Please try again.");
+                            }
                         }
-
-                        String password = passwordGenerator.generatePassword(length);
-                        vaultManager.storeRecord(label, password);
                         System.out.println("Record stored successfully.");
                         break;
 

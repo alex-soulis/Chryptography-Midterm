@@ -21,9 +21,9 @@ public class PasswordGenerator {
     private static final String NUMBERS = "0123456789";
     private static final String SYMBOLS = "!@#$%^&*()-=_+";
 
-    private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final int DEFAULT_PASSWORD_LENGTH = 16;
-    private static final int MAX_PASSWORD_LENGTH = 64;
+    public static final int MIN_PASSWORD_LENGTH = 8;
+    public static final int DEFAULT_PASSWORD_LENGTH = 16;
+    public static final int MAX_PASSWORD_LENGTH = 64;
 
     // All the characters used to generate passwords.
     private final String characterPool;
@@ -61,14 +61,14 @@ public class PasswordGenerator {
         passwordLength = userDefinedLength;
     }
 
-    /**
-     * Gets the current password length.
-     *
-     * @return the current password length
-     */
-    public int getPasswordLength() {
-        return passwordLength;
-    }
+//    /**
+//     * Gets the current password length.
+//     *
+//     * @return the current password length
+//     */
+//    public int getPasswordLength() {
+//        return passwordLength;
+//    }
 
     /**
      * Generates a strong random password consisting of letters (lower and
