@@ -34,8 +34,10 @@ public class Main {
 """);
 
         System.out.println("""
-\tWelcome! This program can be used to create and store passwords. The passwords
-are stored in an encrypted form so that only your key can decrypt them.\n""");
+    Welcome! This program can be used to create and store passwords. The
+passwords are stored in an encrypted form so that only your key can decrypt
+them.
+""");
 
         try {
 
@@ -47,7 +49,8 @@ are stored in an encrypted form so that only your key can decrypt them.\n""");
                 System.out.println("""
 It seems like you are using this program for the first time. Please enter a key
 of your choice that is 16 characters long and consists of letters (lower and/or
-upper case) and numbers (symbols are not allowed).\n""");
+upper case) and numbers (symbols are not allowed).
+""");
 
                 String[] roundKeys;
                 while (true){
@@ -66,6 +69,9 @@ upper case) and numbers (symbols are not allowed).\n""");
                                     + "letters (lower or upper case) and "
                                     + "numbers (symbols are not allowed). "
                                     + "Please try again.");
+                            System.out.println("""
+The key must only contain letters (lower and/or upper case) and numbers (symbols
+are not allowed). Please try again.""");
                         }
                     }
                 }
