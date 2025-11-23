@@ -158,6 +158,7 @@ are not allowed). Please try again.""");
                                         + " password length was used instead.");
                             }
 
+
                             try {
                                 vaultManager.storeRecord(label, password);
                                 break;
