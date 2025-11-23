@@ -144,17 +144,20 @@ are not allowed). Please try again.""");
                             System.out.print("Password length (8–64): ");
                             int length;
 
+                            String password;
                             try {
                                 length = Integer.parseInt(scanner.nextLine());
+                                password = passwordGenerator
+                                        .generatePassword(length);
                             } catch (Exception e) {
                                 length = PasswordGenerator
                                         .DEFAULT_PASSWORD_LENGTH;
+                                password = passwordGenerator
+                                        .generatePassword(length);
                                 System.out.println("Invalid length! The default"
                                         + " password length was used instead.");
                             }
 
-                            String password = passwordGenerator
-                                    .generatePassword(length);
                             try {
                                 vaultManager.storeRecord(label, password);
                                 break;

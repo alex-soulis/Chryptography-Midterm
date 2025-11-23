@@ -25,7 +25,6 @@ public class PasswordGenerator {
     public static final int DEFAULT_PASSWORD_LENGTH = 16;
     public static final int MAX_PASSWORD_LENGTH = 64;
 
-    // All the characters used to generate passwords.
     private final String characterPool;
 
     private int passwordLength;
